@@ -3,6 +3,7 @@
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:foodies/models/CheckIn.dart';
 import 'package:foodies/models/Restaurant.dart';
 import 'package:foodies/models/RestaurantReview.dart';
 import 'package:foodies/models/user.dart';
@@ -16,6 +17,7 @@ class DatabaseService {
   final CollectionReference restaurantCollection = Firestore.instance.collection("restaurants");
   final CollectionReference restaurantReviewCollection = Firestore.instance.collection("restaurantReviews");
   final CollectionReference userData = Firestore.instance.collection("userData");
+  final CollectionReference userCheckIns = Firestore.instance.collection("userCheckIns");
 
   // Future addRestaurant(String name, String country, String city, String postalCode, String street, String streetNumber, List<String> restaurantReviewIds){
 
@@ -30,7 +32,6 @@ return await userData.document(uid).setData({
   }
 
   Future<User> getUserFromId(String id) async{
-    print(id);
     return userData.document(id).get().then((value) {
       return User(
         name: value.data['name'] ?? 'Anonnymous',
@@ -74,6 +75,7 @@ for(RestaurantReview review in res.reviews){
        'priceClass': res.priceClass,
        'photos': res.photos,
         'reviews': reviewIds,
+        'checkincode':res.checkincode,
      });
    }
 
@@ -92,7 +94,9 @@ priceClass: doc.data['priceClass'] ?? '',
 street: doc.data['street'] ?? '',
 streetNumber: doc.data['streetNumber'] ?? '',
 rating: doc.data['rating'],
+checkincode: doc.data['checkincode'],
 id: doc.documentID,
+
 reviews:  new List<RestaurantReview>()
   );
 }).toList();
@@ -108,7 +112,6 @@ reviews:  new List<RestaurantReview>()
 return restaurantReviewCollection.where('restaurant', isEqualTo: restaurant.id).getDocuments().then((querysnapshot) async{
   List<RestaurantReview> reviews = _restaurantReviewListFromSnapshot(querysnapshot,restaurant);
   for(RestaurantReview review in reviews) {
-    print(review.city);
     await getUserFromId(review.foodie.uid).then((value) => review.foodie = value);
   }
 return reviews;
@@ -117,7 +120,6 @@ return reviews;
 
    List<RestaurantReview> _restaurantReviewListFromSnapshot(QuerySnapshot snapshot,Restaurant res){
 return snapshot.documents.map((doc) {
-  print(doc.data['foodieId']);
  return RestaurantReview(
 id:doc.data['id'],
 review: doc.data['review'],
@@ -148,7 +150,7 @@ foodie: new User(uid: doc.data['foodieId']),
 return restaurantReviewCollection.where('city', isEqualTo: city).getDocuments().then((querysnapshot) async{
   List<RestaurantReview> reviews = _restaurantReviewListFromSnapshot(querysnapshot,null);
   for(RestaurantReview review in reviews){
-    print("------------------"+review.foodie.uid);
+  
   
     User haps = await getUserFromId(review.foodie.uid);
     await getRestaurantFromId(review.restaurant.id).then((value) => review.restaurant = value);
@@ -157,6 +159,55 @@ return restaurantReviewCollection.where('city', isEqualTo: city).getDocuments().
 return reviews;
 });
    }
+
+
+// gets all checkins from one user
+ Future<List<CheckIn>> getUserCheckIn() async{
+return userCheckIns.where('foodie', isEqualTo: uid).getDocuments().then((querysnapshot) async{
+  List<CheckIn> checkins =  _checkinsListFromSnapshot(querysnapshot);
+
+  print("Get user checin method: " + checkins.runtimeType.toString());
+
+  for(CheckIn checkIn in checkins){
+    print(checkIn.restaurant);
+    User user = await getUserFromId(checkIn.foodie.uid);
+    await getRestaurantFromId(checkIn.restaurant.id).then((value) => checkIn.restaurant = value);
+    checkIn.foodie = user;
+  }
+return checkins;
+});
+  }
+
+  //
+  Future<Restaurant> getRestaurantFromCheckinCode(String checkincode){
+return restaurantCollection.where('checkincode', isEqualTo: checkincode).getDocuments().then((value) => _resturantListFromSnapshot(value)[0]);
+  }
+
+// Converts querysnapshot to dart objects
+  List<CheckIn> _checkinsListFromSnapshot(snapshot){
+return snapshot.documents.map<CheckIn>((doc) {
+  print(doc.data['foodie']);
+  
+ 
+ return CheckIn(
+id:"haps",
+restaurant: new Restaurant(id:doc.data['restaurant']),
+foodie: new User(uid: doc.data['foodie']),
+time:(doc.data["time"] as Timestamp).toDate()
+);
+
+}).toList();
+   
+  }
+
+  Future AddCheckin(CheckIn checkIn)async{
+    return await userCheckIns.document().setData({
+       'foodie': checkIn.foodie.uid,
+       'restaurant': checkIn.restaurant.id,
+       'time': checkIn.time,
+     });
+   }
+  
 
 
 

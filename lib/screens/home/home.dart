@@ -1,11 +1,15 @@
+import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:foodies/models/CheckIn.dart';
 import 'package:foodies/models/Restaurant.dart';
 import 'package:foodies/models/RestaurantReview.dart';
 import 'package:foodies/models/user.dart';
 import 'package:foodies/models/user.dart';
+import 'package:foodies/screens/check_in/Scan.dart';
 import 'package:foodies/screens/profile/profile.dart';
 import 'package:foodies/screens/restaurant_page/restaurantPage.dart';
 import 'package:foodies/screens/restaurantreview/Res_review_view.dart';
@@ -29,9 +33,11 @@ class _Home extends State<Home> {
   int _selectedIndex = 0;
   Future<String> _city;
   Future<List<Restaurant>> _restaurants;
+  Future<List<CheckIn>> _checkins;
   Future<List<RestaurantReview>> _reviews;
   User _user;
   DatabaseService _database;
+   String barcode = "";
   
   int _index = 0;
 final AuthService _auth = AuthService();
@@ -48,6 +54,7 @@ final AuthService _auth = AuthService();
 
     // initial load
     _city =  _getCurrentLocation();
+    _checkins = _database.getUserCheckIn();
     _restaurants = _database.getRestaurantsByCity("Aarhus");
     _reviews = _database.getCitysReviews("Aarhus");
      
@@ -83,7 +90,7 @@ final AuthService _auth = AuthService();
  final tabs = [
     _HomeScreen(context),
     Center(child: Text("Search"),),
-    Center(child: Text("Review"),),
+    _reviewScreen(context),
     Center(child: Text("Notifications"),),
     UserProfilePage(),
   ];
@@ -168,8 +175,7 @@ final AuthService _auth = AuthService();
           return new Text('Error: ${snapshot.error}');
         else{
          List<RestaurantReview> reviews = snapshot.data;
-         print("reviews: " + reviews.toString());
-         print(reviews.length);
+
         return Flexible(
                   child: ListView.builder(
             scrollDirection: Axis.horizontal,
@@ -349,7 +355,7 @@ builder: (BuildContext context, AsyncSnapshot<List<Restaurant>> snapshot) {
           )],
                     ),
                     onTap: (){
-                      print(restaurants[i].photos.length);
+             
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) =>  RestaurantPage(restaurant: restaurants[i])),
@@ -377,7 +383,7 @@ final database = DatabaseService(uid:user.uid);
     
 
    Widget _buildExploreCity(BuildContext context) {
-     print(_city);
+
      
     //  if(city != ""){
     //    return Center(child: new Text("Explore " + city,style: TextStyle(fontFamily: "Montserrat",fontSize: 38,color: Colors.teal,fontWeight: FontWeight.bold),));
@@ -432,4 +438,123 @@ _generateCard(""),
 
     
   }
+
+  Widget _reviewScreen(BuildContext context){
+
+final user = Provider.of<User>(context);
+final database = DatabaseService(uid:user.uid);
+    
+
+   Widget _buildCheckInList(BuildContext context) {
+
+    return new FutureBuilder<List<CheckIn>>(
+  future: _checkins, // a Future<String> or null
+  builder: (BuildContext context, AsyncSnapshot<List<CheckIn>> snapshot) {
+    switch (snapshot.connectionState) {
+      case ConnectionState.none: return new Text('Press button to start');
+      case ConnectionState.waiting: return new Text('Awaiting result...');
+      default:
+        if (snapshot.hasError)
+          return new Text('Error: ${snapshot.error}');
+        else{
+        List<CheckIn> checkIns = new List<CheckIn>.from(snapshot.data);
+      
+        
+          return 
+            Column(
+              children: [
+                Padding(padding:EdgeInsets.all(12)),
+                Text("Your Check-ins", style: TextStyle(fontSize: 22),),
+                Expanded(
+                                  child: ListView.builder(
+  padding: const EdgeInsets.all(8),
+  itemCount: checkIns.length,
+  itemBuilder: (BuildContext context, int index) {
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: Container(
+        height: 50,
+       
+        child: ListTile(
+          title: Column(
+            children: [
+              Center(child: Text(checkIns[index].restaurant.name)),
+              Center(child: Text(checkIns[index].time.toString()),),
+            ],
+          ),
+          
+          onTap: (){},
+          ),
+      ),
+    );
+  }
+),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => ScanPage()),
+                            );
+        },
+        label: Text("Check-in"),
+        icon: Icon(Icons.add_location),
+        backgroundColor: Colors.teal[300],
+      ),
+                    ],
+                  ),
+                ),
+              ],
+              
+            );
+          
+        }
+    }
+  },
+);
+  }
+
+
+  
+
+
+    return Scaffold(
+      body: 
+      // Column(
+        //mainAxisAlignment: MainAxisAlignment.start,
+        // children: [
+        // SizedBox(height: 30,),
+        // Text("data"),
+//          RaisedButton(
+//             onPressed: () async{
+// Restaurant res = await database.getRestaurantsByCity("Aarhus").then((value) => value[1]);
+// User user = await database.getUserFromId(database.uid);
+
+// CheckIn checkin = new CheckIn(foodie:user, restaurant: res,time:DateTime.now());
+//              await database.AddCheckin(checkin);
+//             },
+//             child: const Text('Enabled Button', style: TextStyle(fontSize: 20)),
+//           ),
+          _buildCheckInList(context),
+//_buildExploreCity(context),
+//_generateCard(""),
+
+
+      // ],)
+    );
+
+
+
+
+    
+  }
+
+
+
+
 }
