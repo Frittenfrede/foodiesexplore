@@ -42,6 +42,7 @@ dependencies:
   qr_flutter:
   flutter_vector_icons:
   
+  
 
 
   firebase_auth: ^0.16.1

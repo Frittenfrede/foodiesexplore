@@ -73,6 +73,7 @@ for(RestaurantReview review in res.reviews){
        'streetNumber': res.streetNumber,
        'rating':res.rating,
        'priceClass': res.priceClass,
+       'coordinates': res.coordinates,
        'photos': res.photos,
         'reviews': reviewIds,
         'checkincode':res.checkincode,
@@ -94,6 +95,7 @@ priceClass: doc.data['priceClass'] ?? '',
 street: doc.data['street'] ?? '',
 streetNumber: doc.data['streetNumber'] ?? '',
 rating: doc.data['rating'],
+coordinates: doc.data['coordinates'].cast<double>(),
 checkincode: doc.data['checkincode'],
 id: doc.documentID,
 
@@ -174,6 +176,7 @@ return userCheckIns.where('foodie', isEqualTo: uid).getDocuments().then((querysn
     await getRestaurantFromId(checkIn.restaurant.id).then((value) => checkIn.restaurant = value);
     checkIn.foodie = user;
   }
+  checkins.sort((a, b) => a.time.compareTo(b.time));
 return checkins;
 });
   }

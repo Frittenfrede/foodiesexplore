@@ -22,21 +22,12 @@ class MyApp extends StatelessWidget {
   return StreamProvider<User>.value(
     value: AuthService().user,
       child: MaterialApp(
-        // title: 'foodies club app',
-        // onGenerateRoute: router.generateRoute,
-        // initialRoute: "/",
         home: Wrapper(),
 
 
 
       ),
   );
-        //----------------------KOMMENTER DETTE IND FOR AT STARTE MED DATABASER IGEN------------------
-        //Her kan tilføjes multiprovider
-        // StreamProvider<User>.value(
-        //     value: AuthService().user,
-        //     child: MaterialApp(
-        //       home: Wrapper(),
-            // ));
+
    }
 }

@@ -1,4 +1,5 @@
 import 'package:barcode_scan/barcode_scan.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import 'package:foodies/screens/check_in/Scan.dart';
 import 'package:foodies/screens/profile/profile.dart';
 import 'package:foodies/screens/restaurant_page/restaurantPage.dart';
 import 'package:foodies/screens/restaurantreview/Res_review_view.dart';
+import 'package:foodies/screens/reviewScreen/reviewScreen.dart';
 import 'package:foodies/services/database.dart';
 import 'package:foodies/shared/constants.dart';
 import 'package:foodies/services/auth.dart';
@@ -447,6 +449,21 @@ final database = DatabaseService(uid:user.uid);
 
    Widget _buildCheckInList(BuildContext context) {
 
+//      StreamBuilder<QuerySnapshot>(
+//   stream: Firestore.instance.collection('books').snapshots().where((e) => false),
+//   builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+//     if (!snapshot.hasData) return new Text('Loading...');
+//     return new ListView(
+//       children: snapshot.data.documents.map((DocumentSnapshot document) {
+//         return new ListTile(
+//           title: new Text(document['title']),
+//           subtitle: new Text(document['author']),
+//         );
+//       }).toList(),
+//     );
+//   },
+// );
+
     return new FutureBuilder<List<CheckIn>>(
   future: _checkins, // a Future<String> or null
   builder: (BuildContext context, AsyncSnapshot<List<CheckIn>> snapshot) {
@@ -476,6 +493,7 @@ final database = DatabaseService(uid:user.uid);
         height: 50,
        
         child: ListTile(
+          
           title: Column(
             children: [
               Center(child: Text(checkIns[index].restaurant.name)),
@@ -483,7 +501,14 @@ final database = DatabaseService(uid:user.uid);
             ],
           ),
           
-          onTap: (){},
+          onTap: (){
+                    Navigator
+                    .push(
+                  context,
+                  new MaterialPageRoute(builder: (context) => new ReviewScreen(checkIn:checkIns[index],restaurant: checkIns[index].restaurant,)),
+                );
+
+          },
           ),
       ),
     );
@@ -496,11 +521,15 @@ final database = DatabaseService(uid:user.uid);
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
+        onPressed: ()async {
+          await Navigator.push(
                               context,
                               MaterialPageRoute(builder: (context) => ScanPage()),
                             );
+                            setState(() {
+                              //Updates the Review screen UI showing the newly added checkin
+                              _checkins = _database.getUserCheckIn();
+                            });
         },
         label: Text("Check-in"),
         icon: Icon(Icons.add_location),

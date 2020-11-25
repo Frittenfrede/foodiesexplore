@@ -9,12 +9,13 @@ class Restaurant{
   String streetNumber;
   double rating;
   String checkincode;
+  List<double> coordinates;
   List<RestaurantReview> reviews;
   int priceClass;
   List<String> photos;
   String id;
 
-  Restaurant({this.name, this.country,this.city,this.postalCode,this.street,this.streetNumber,this.checkincode,this.rating,this.reviews,this.priceClass,this.photos,this.id});
+  Restaurant({this.name, this.country,this.city,this.postalCode,this.street,this.streetNumber,this.checkincode,this.coordinates,this.rating,this.reviews,this.priceClass,this.photos,this.id});
 
  static List<Restaurant> getRestaurants(){
    List<Restaurant> rests = new List<Restaurant>();
