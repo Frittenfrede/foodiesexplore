@@ -1,27 +1,21 @@
 import 'package:foodies/models/user.dart';
-import 'package:foodies/screens/authenticate/authenticate.dart';
-import 'package:foodies/screens/authenticate/sign_in.dart';
 import 'package:foodies/screens/home/home.dart';
 
-import  'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'authenticate/login_choice.dart';
 
+class Wrapper extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final user = Provider.of<User>(context);
 
-  class Wrapper extends StatelessWidget {
-   @override
-   Widget build(BuildContext context) {
-
-     final user = Provider.of<User>(context);
-     
-
-     // Return either home or authenticate widget
-     if(user == null){
-       return LoginChoice();
-     }
-     else{
-       return Home();
-     }
-   }
- }
+    // Return either home or authenticate widget
+    if (user == null) {
+      return LoginChoice();
+    } else {
+      return Home();
+    }
+  }
+}

@@ -13,92 +13,81 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 class UserProfilePage extends StatefulWidget {
-
-
-
   @override
   _UserProfilePageState createState() => _UserProfilePageState();
 }
+//https://gist.github.com/Blasanka/3e53d2f22ecbac9f9e937dcaf3c1f563
 
 class _UserProfilePageState extends State<UserProfilePage> {
+  final AuthService _auth = AuthService();
+  String _fullName = "Nick Frost";
 
-final AuthService _auth = AuthService();
-   String _fullName = "Nick Frost";
+  String _status = "Software Developer";
 
-   String _status = "Software Developer";
-
-   String _bio =
+  String _bio =
       "\"Hi, I am a Freelance developer. I have a great passion for food, especially food from the asian kitchen. Follow me to get restaurant reviews from all over the globe.\"";
 
-   String _followers = "173";
+  String _followers = "173";
 
-   String _posts = "24";
+  String _posts = "24";
 
-   String _scores = "450";
+  String _scores = "450";
 
-   String _imagePath = "";
-
-  
+  String _imagePath = "";
 
   // Keeping check with the imageupload
-   StorageUploadTask _uploadTask;
+  StorageUploadTask _uploadTask;
 
 // image picker
-   final ImagePicker _picker = ImagePicker();
-   File _imageFile;
+  final ImagePicker _picker = ImagePicker();
+  File _imageFile;
 
-  Widget _buildCoverImage(Size screenSize,User user) {
+  Widget _buildCoverImage(Size screenSize, User user) {
     return Container(
       height: screenSize.height / 2.6,
-        
-        child:Card(
+      child: Card(
           shadowColor: Colors.grey,
           color: Color.fromRGBO(46, 98, 94, 1),
-          
           child: Center(child: Image.asset("assets/images/resturant.jpg"))),
-
     );
   }
 
-   Future<void> _pickImage(ImageSource source,FirebaseUser user) async {
-      PickedFile file = await _picker.getImage(source: source);
+  Future<void> _pickImage(ImageSource source, FirebaseUser user) async {
+    PickedFile file = await _picker.getImage(source: source);
 
-      setState(() {
-        if(file != null)
-        _imageFile = File(file.path);
-      });
-      await _cropImage(user);
-     
-    }
+    setState(() {
+      if (file != null) _imageFile = File(file.path);
+    });
+    await _cropImage(user);
+  }
 
 // uploads file to bucket
-void _startUpload(File file,FirebaseUser user) async{
-  String filePath = 'images/ ' + _fullName +"/" +DateTime.now().toString()+ ".png";
-  final FirebaseStorage _storage = FirebaseStorage(storageBucket: "gs://foodies-club-7c753.appspot.com");
-  setState(() {
-    _uploadTask = _storage.ref().child(filePath).putFile(file);  
-  });
-  String docUrl = await (await _uploadTask.onComplete).ref.getDownloadURL();
-  print(docUrl);
-  await _updateuserProfilePicture(user,docUrl);
-}
+  void _startUpload(File file, FirebaseUser user) async {
+    String filePath =
+        'images/ ' + _fullName + "/" + DateTime.now().toString() + ".png";
+    final FirebaseStorage _storage =
+        FirebaseStorage(storageBucket: "gs://foodies-club-7c753.appspot.com");
+    setState(() {
+      _uploadTask = _storage.ref().child(filePath).putFile(file);
+    });
+    String docUrl = await (await _uploadTask.onComplete).ref.getDownloadURL();
+    print(docUrl);
+    await _updateuserProfilePicture(user, docUrl);
+  }
 
 //Updates the users profile picture
-Future _updateuserProfilePicture(FirebaseUser user,String filepath) async{
-  UserUpdateInfo updateinfo = UserUpdateInfo();
- updateinfo.photoUrl = filepath;
-  await user.updateProfile(updateinfo);
- setState(() {
-   _imagePath = filepath;
- });
-}
+  Future _updateuserProfilePicture(FirebaseUser user, String filepath) async {
+    UserUpdateInfo updateinfo = UserUpdateInfo();
+    updateinfo.photoUrl = filepath;
+    await user.updateProfile(updateinfo);
+    setState(() {
+      _imagePath = filepath;
+    });
+  }
 
-
- // cropimage and save image to firebase bucket
+  // cropimage and save image to firebase bucket
   Future<void> _cropImage(FirebaseUser user) async {
-
-
-     File croppedFile = await ImageCropper.cropImage(
+    File croppedFile = await ImageCropper.cropImage(
         sourcePath: _imageFile.path,
         aspectRatioPresets: Platform.isAndroid
             ? [
@@ -131,67 +120,62 @@ Future _updateuserProfilePicture(FirebaseUser user,String filepath) async{
       _imageFile = croppedFile;
       setState(() {
         _imageFile = croppedFile ?? _imageFile;
-       _startUpload(_imageFile,user);
+        _startUpload(_imageFile, user);
       });
     }
   }
 
   // remove image
-  void _clear(){
+  void _clear() {
     setState(() {
       _imageFile = null;
     });
   }
 
-
-
-      // choose between camera or photolibrary
-      void _showOptions(BuildContext context) {
-
-   
-        
-      showModalBottomSheet(
-          context: context,
-          builder: (context) {
-            return Container(
-                height: 150,
-                child: Column(children: <Widget>[
-                  ListTile(
-                    leading: Icon(Icons.photo_camera),
-                    title: Text("Take a picture from camera"),
-                    onTap: () async {
-                      _pickImage(ImageSource.camera, await _auth.firebaseUser);
-                      Navigator.pop(context);
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.photo_library),
-                    title: Text("Choose from photo library"),
-                    onTap: () async{
-                      _pickImage(ImageSource.gallery, await _auth.firebaseUser);
-                      Navigator.pop(context);
-                    },
-                  )
-                ]));
-          });
-    }
+  // choose between camera or photolibrary
+  void _showOptions(BuildContext context) {
+    showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return Container(
+              height: 150,
+              child: Column(children: <Widget>[
+                ListTile(
+                  leading: Icon(Icons.photo_camera),
+                  title: Text("Take a picture from camera"),
+                  onTap: () async {
+                    _pickImage(ImageSource.camera, await _auth.firebaseUser);
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.photo_library),
+                  title: Text("Choose from photo library"),
+                  onTap: () async {
+                    _pickImage(ImageSource.gallery, await _auth.firebaseUser);
+                    Navigator.pop(context);
+                  },
+                )
+              ]));
+        });
+  }
 
   Widget _buildProfileImage(User user) {
-    _imagePath =user.picturePath;
+    _imagePath = user.picturePath;
     return Center(
       child: GestureDetector(
-          child: Container(
+        child: Container(
           width: 70.0,
           height: 70.0,
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            image: DecorationImage(image: NetworkImage(_imagePath),fit: BoxFit.fill)),
-          ),
-          onTap: (){
-      _showOptions(context);
-          },
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                  image: NetworkImage(_imagePath), fit: BoxFit.fill)),
+        ),
+        onTap: () {
+          _showOptions(context);
+        },
       ),
-     
     );
   }
 
@@ -210,9 +194,6 @@ Future _updateuserProfilePicture(FirebaseUser user,String filepath) async{
   }
 
   Widget _buildStatus(BuildContext context) {
-
- 
-
     return Container(
       padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
       decoration: BoxDecoration(
@@ -281,7 +262,7 @@ Future _updateuserProfilePicture(FirebaseUser user,String filepath) async{
   Widget _buildBio(BuildContext context) {
     TextStyle bioTextStyle = TextStyle(
       fontFamily: 'Montserrat',
-      fontWeight: FontWeight.w400,//try changing weight to w500 if not thin
+      fontWeight: FontWeight.w400, //try changing weight to w500 if not thin
       fontStyle: FontStyle.italic,
       color: Color(0xFF799497),
       fontSize: 16.0,
@@ -319,9 +300,8 @@ Future _updateuserProfilePicture(FirebaseUser user,String filepath) async{
   }
 
   Widget _buildButtons(BuildContext context) {
-
-final user = Provider.of<User>(context);
-final database = DatabaseService(uid:user.uid);
+    final user = Provider.of<User>(context);
+    final database = DatabaseService(uid: user.uid);
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
@@ -330,8 +310,9 @@ final database = DatabaseService(uid:user.uid);
           Expanded(
             child: InkWell(
               onTap: () async {
-              List<Restaurant> rests = await  database.getRestaurantsByCity("aarhus");
-              print(rests);
+                List<Restaurant> rests =
+                    await database.getRestaurantsByCity("aarhus");
+                print(rests);
               },
               child: Container(
                 height: 40.0,
@@ -356,19 +337,39 @@ final database = DatabaseService(uid:user.uid);
             child: InkWell(
               onTap: () async {
                 final AuthService _auth = AuthService();
-                List<Restaurant> rests = await database.getRestaurantsByCity("aarhus");
-                RestaurantReview temp = RestaurantReview(foodie: user, review: "De dampede muslinger var superb, dog var bøffen lidt for gennemstegt",rating: 4.3, restaurant: rests[1],city: "aarhus",photos: ['https://media-cdn.tripadvisor.com/media/photo-f/19/8f/8f/dc/carpaccio-a-la-ombord.jpg','https://media-cdn.tripadvisor.com/media/photo-f/19/8f/8f/6b/ceviche-af-hellefisk.jpg']);
-                
-                RestaurantReview temp1 = RestaurantReview(foodie: user, review: "Lækre små anretninger der passer til enhver smag og de er inspireret af de spanske køkken",rating: 4.1,city: "aarhus", restaurant: rests[1],photos: ['https://media-cdn.tripadvisor.com/media/photo-s/1a/34/bb/c8/chiagrod.jpg','https://media-cdn.tripadvisor.com/media/photo-s/18/f7/af/38/desserter.jpg']);
+                List<Restaurant> rests =
+                    await database.getRestaurantsByCity("aarhus");
+                RestaurantReview temp = RestaurantReview(
+                    foodie: user,
+                    review:
+                        "De dampede muslinger var superb, dog var bøffen lidt for gennemstegt",
+                    rating: 4.3,
+                    restaurant: rests[1],
+                    city: "aarhus",
+                    photos: [
+                      'https://media-cdn.tripadvisor.com/media/photo-f/19/8f/8f/dc/carpaccio-a-la-ombord.jpg',
+                      'https://media-cdn.tripadvisor.com/media/photo-f/19/8f/8f/6b/ceviche-af-hellefisk.jpg'
+                    ]);
+
+                RestaurantReview temp1 = RestaurantReview(
+                    foodie: user,
+                    review:
+                        "Lækre små anretninger der passer til enhver smag og de er inspireret af de spanske køkken",
+                    rating: 4.1,
+                    city: "aarhus",
+                    restaurant: rests[1],
+                    photos: [
+                      'https://media-cdn.tripadvisor.com/media/photo-s/1a/34/bb/c8/chiagrod.jpg',
+                      'https://media-cdn.tripadvisor.com/media/photo-s/18/f7/af/38/desserter.jpg'
+                    ]);
                 await database.addRestaurantReview(temp);
                 await database.addRestaurantReview(temp1);
                 //await _auth.signOut();
-                  // await database.addRestaurant(Restaurant.getRestaurants()[0]);
-                  //  await database.addRestaurant(Restaurant.getRestaurants()[1]);
-                  //   await database.addRestaurant(Restaurant.getRestaurants()[2]);
-                  //    await database.addRestaurant(Restaurant.getRestaurants()[3]);
-                  //     await database.addRestaurant(Restaurant.getRestaurants()[4]);
-                
+                // await database.addRestaurant(Restaurant.getRestaurants()[0]);
+                //  await database.addRestaurant(Restaurant.getRestaurants()[1]);
+                //   await database.addRestaurant(Restaurant.getRestaurants()[2]);
+                //    await database.addRestaurant(Restaurant.getRestaurants()[3]);
+                //     await database.addRestaurant(Restaurant.getRestaurants()[4]);
               },
               child: Container(
                 height: 40.0,
@@ -394,36 +395,36 @@ final database = DatabaseService(uid:user.uid);
 
   @override
   Widget build(BuildContext context) {
-     final user = Provider.of<User>(context);
-     _fullName = user.name;
-     
+    final user = Provider.of<User>(context);
+    _fullName = user.name;
 
     Size screenSize = MediaQuery.of(context).size;
     return Scaffold(
       body: Stack(
         children: <Widget>[
-          
           SafeArea(
             child: SingleChildScrollView(
               child: Column(
                 children: <Widget>[
-                  _buildCoverImage(screenSize,user),
-                 // SizedBox(height: screenSize.height / 3),
+                  _buildCoverImage(screenSize, user),
+                  // SizedBox(height: screenSize.height / 3),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(40.0,8.0,8.0,8.0),
+                    padding: const EdgeInsets.fromLTRB(40.0, 8.0, 8.0, 8.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         _buildProfileImage(user),
-                    Expanded(
-                                          child: Column(
-                        children: [
-                          _buildFullName(),
-                      _buildStatus(context),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: (screenSize.width / 6.0),)
+                        Expanded(
+                          child: Column(
+                            children: [
+                              _buildFullName(),
+                              _buildStatus(context),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                          width: (screenSize.width / 6.0),
+                        )
                       ],
                     ),
                   ),

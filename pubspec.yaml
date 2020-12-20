@@ -41,6 +41,9 @@ dependencies:
   barcode_scan: ^3.0.1
   qr_flutter:
   flutter_vector_icons:
+  multi_image_picker: ^4.7.14
+  path_provider: ^1.6.24
+  flutter_absolute_path: ^1.0.6
   
   
 

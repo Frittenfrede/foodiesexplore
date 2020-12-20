@@ -2,13 +2,11 @@ import 'package:foodies/models/user.dart';
 
 import 'Restaurant.dart';
 
-class CheckIn{
+class CheckIn {
   User foodie;
   Restaurant restaurant;
   DateTime time;
-   String id;
+  String id;
 
-  CheckIn({this.foodie,this.restaurant,this.time,this.id});
-
-  
+  CheckIn({this.foodie, this.restaurant, this.time, this.id});
 }
